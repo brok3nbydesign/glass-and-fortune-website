@@ -7,7 +7,7 @@ export const HERO = {
   tagline: 'Bend the roll. Build the hand. Cheat fate.',
   description:
     'Five glass dice wait on Morrow’s table. Turn a number, tint a colour, spend your Favour wisely — and cast a hand strong enough to survive twelve Readings.',
-  invitation: 'Go on. Try your luck.',
+  invitation: 'Go on. Pick it up.',
 };
 
 export const ABOUT = {
@@ -107,14 +107,16 @@ export const GALLERY = [
   {id: 'shot-late', caption: 'Final cast of a late Reading', alt: 'Reading eleven, a final cast with five differently coloured dice forming a Spectrum Fourfold'},
 ];
 
-/* Shown when the die settles. Two per face so a repeat throw reads fresh. */
+/* Shown when the die settles. Two per face so a repeat throw reads fresh.
+   No face is better than another: the die is a toy, so the lines are about
+   the glass and the throw, never about winning or fortune. */
 export const RESULT_LINES = {
-  1: ['A one. Even fortune starts somewhere.', 'A one. The night is young.'],
-  2: ['A two. Fortune is only warming up.', 'A two. Hardly a prophecy. Again?'],
-  3: ['A three. The parlour leans in.', 'A three. A modest omen.'],
-  4: ['A four. Morrow nods, almost approving.', 'A four. The glass is listening.'],
-  5: ['A five. The candles burn a little brighter.', 'A five. So very nearly perfect.'],
-  6: ['A six. Fortune favours the curious.', 'A six. Fortune favours you.'],
+  1: ['A one. Throw it again, it won’t break.', 'A one. It doesn’t mind being thrown.'],
+  2: ['A two. Pick it up again.', 'A two. Try a harder throw.'],
+  3: ['A three. Hold it up to the light.', 'A three. Bounce it off a rail.'],
+  4: ['A four. Try a gentler throw.', 'A four. Spin it as you let go.'],
+  5: ['A five. Roll it along the velvet.', 'A five. Throw it from a corner.'],
+  6: ['A six. Throw it again.', 'A six. Watch the light move through it.'],
 };
 
 export const FINAL_CTA = {
