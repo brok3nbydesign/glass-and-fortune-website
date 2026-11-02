@@ -1,0 +1,322 @@
+{
+  "schema_version": 2,
+  "asset": "glass_die.glb",
+  "root_node": "GlassDie",
+  "body_node": "GlassBody",
+  "body_material": "GlassBody_Garnet",
+  "markings_material": "Markings_White_OneSided",
+  "color": {
+    "id": "ruby",
+    "name": "Garnet",
+    "srgb": "#bd4055",
+    "symbol": "diamond"
+  },
+  "units": "metres; body side length 2; centred origin",
+  "appearance": {
+    "revision": "reference-rounded-inlays",
+    "markings_style": "pips",
+    "pip_inlays": true,
+    "edge_style": "rounded 0.24 on a 2-unit body, ten segments",
+    "bevel": 0.24,
+    "symbol_corner": 0.67,
+    "symbol_radius": 0.075,
+    "transmission": 0.9,
+    "roughness": 0.08,
+    "ior": 1.46,
+    "clearcoat": 0.15,
+    "clearcoat_roughness": 0.08,
+    "markings": "white"
+  },
+  "coordinates": {
+    "blender": "right handed Z up",
+    "gltf": "right handed Y up",
+    "blender_to_gltf": "(x,y,z) -> (x,z,-y)",
+    "face_node_local_gltf": {
+      "normal": [
+        0,
+        1,
+        0
+      ],
+      "up": [
+        0,
+        0,
+        -1
+      ],
+      "right": [
+        1,
+        0,
+        0
+      ]
+    },
+    "scoring": "requested face normal must point to world +Y in glTF; default upper face is 1",
+    "verification": "directions and positions read back from the actual exported GLB node transforms"
+  },
+  "faces": [
+    {
+      "value": 1,
+      "opposite": 6,
+      "face_node": "Face_1",
+      "marking_node": "Marking_1",
+      "numeral_node": "Marking_1",
+      "symbol_anchor": "SymbolAnchor_1",
+      "symbol_node": "Symbol_Garnet_1",
+      "normal_blender": [
+        0,
+        0,
+        1
+      ],
+      "up_blender": [
+        0,
+        1,
+        0
+      ],
+      "normal_gltf": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "up_gltf": [
+        0.0,
+        0.0,
+        -1.0
+      ],
+      "right_gltf": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "face_center_gltf": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "symbol_position_gltf": [
+        0.67,
+        1.003,
+        0.67
+      ]
+    },
+    {
+      "value": 2,
+      "opposite": 5,
+      "face_node": "Face_2",
+      "marking_node": "Marking_2",
+      "numeral_node": "Marking_2",
+      "symbol_anchor": "SymbolAnchor_2",
+      "symbol_node": "Symbol_Garnet_2",
+      "normal_blender": [
+        0,
+        1,
+        0
+      ],
+      "up_blender": [
+        0,
+        0,
+        1
+      ],
+      "normal_gltf": [
+        -0.0,
+        -0.0,
+        -1.0
+      ],
+      "up_gltf": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "right_gltf": [
+        -1.0,
+        0.0,
+        0.0
+      ],
+      "face_center_gltf": [
+        0.0,
+        0.0,
+        -1.0
+      ],
+      "symbol_position_gltf": [
+        -0.67,
+        -0.67,
+        -1.003
+      ]
+    },
+    {
+      "value": 3,
+      "opposite": 4,
+      "face_node": "Face_3",
+      "marking_node": "Marking_3",
+      "numeral_node": "Marking_3",
+      "symbol_anchor": "SymbolAnchor_3",
+      "symbol_node": "Symbol_Garnet_3",
+      "normal_blender": [
+        1,
+        0,
+        0
+      ],
+      "up_blender": [
+        0,
+        0,
+        1
+      ],
+      "normal_gltf": [
+        1.0,
+        -0.0,
+        0.0
+      ],
+      "up_gltf": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "right_gltf": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "face_center_gltf": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "symbol_position_gltf": [
+        1.003,
+        -0.67,
+        -0.67
+      ]
+    },
+    {
+      "value": 4,
+      "opposite": 3,
+      "face_node": "Face_4",
+      "marking_node": "Marking_4",
+      "numeral_node": "Marking_4",
+      "symbol_anchor": "SymbolAnchor_4",
+      "symbol_node": "Symbol_Garnet_4",
+      "normal_blender": [
+        -1,
+        0,
+        0
+      ],
+      "up_blender": [
+        0,
+        0,
+        1
+      ],
+      "normal_gltf": [
+        -1.0,
+        -0.0,
+        0.0
+      ],
+      "up_gltf": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "right_gltf": [
+        -0.0,
+        0.0,
+        1.0
+      ],
+      "face_center_gltf": [
+        -1.0,
+        0.0,
+        0.0
+      ],
+      "symbol_position_gltf": [
+        -1.003,
+        -0.67,
+        0.67
+      ]
+    },
+    {
+      "value": 5,
+      "opposite": 2,
+      "face_node": "Face_5",
+      "marking_node": "Marking_5",
+      "numeral_node": "Marking_5",
+      "symbol_anchor": "SymbolAnchor_5",
+      "symbol_node": "Symbol_Garnet_5",
+      "normal_blender": [
+        0,
+        -1,
+        0
+      ],
+      "up_blender": [
+        0,
+        0,
+        1
+      ],
+      "normal_gltf": [
+        0.0,
+        -0.0,
+        1.0
+      ],
+      "up_gltf": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "right_gltf": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "face_center_gltf": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "symbol_position_gltf": [
+        0.67,
+        -0.67,
+        1.003
+      ]
+    },
+    {
+      "value": 6,
+      "opposite": 1,
+      "face_node": "Face_6",
+      "marking_node": "Marking_6",
+      "numeral_node": "Marking_6",
+      "symbol_anchor": "SymbolAnchor_6",
+      "symbol_node": "Symbol_Garnet_6",
+      "normal_blender": [
+        0,
+        0,
+        -1
+      ],
+      "up_blender": [
+        0,
+        -1,
+        0
+      ],
+      "normal_gltf": [
+        0.0,
+        -1.0,
+        -0.0
+      ],
+      "up_gltf": [
+        0.0,
+        -0.0,
+        1.0
+      ],
+      "right_gltf": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "face_center_gltf": [
+        0.0,
+        -1.0,
+        0.0
+      ],
+      "symbol_position_gltf": [
+        0.67,
+        -1.003,
+        -0.67
+      ]
+    }
+  ],
+  "markings": "concave white pip inlays in spherical sockets, outward surface only; glTF doubleSided=false, no backside surfaces",
+  "provenance": "Original scripted geometry, custom pip and numeral shapes and diamond. No fonts or textures. Blender bundled glTF exporter; no third party packages."
+}

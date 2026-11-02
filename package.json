@@ -1,0 +1,30 @@
+{
+  "name": "glass-and-fortune-website",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Official promotional website for Glass & Fortune by Brok3n by Design.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173",
+    "images": "node scripts/prepare-images.mjs",
+    "test": "node scripts/check-site.mjs"
+  },
+  "dependencies": {
+    "@react-three/fiber": "^9.8.2",
+    "@react-three/rapier": "^2.2.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "three": "^0.187.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.2.1",
+    "playwright": "^1.64.1",
+    "sharp": "^0.35.5",
+    "vite": "^8.3.5"
+  }
+}
