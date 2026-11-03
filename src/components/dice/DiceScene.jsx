@@ -16,7 +16,8 @@ const DYNAMIC = 0;
 const KINEMATIC = 2;
 
 const GRAVITY = -26;      // heavier than real: a 1-unit die under 9.8 falls like a balloon
-const LIFT = 1.7;         // how high a held die hovers above the table
+const LIFT = 2.5;         // how high a held die is raised above the table
+const LIFT_MIN = 1.4;     // lowest it dips, to stay in view over the back rail
 const SETTLE_SPEED = 0.06;
 const SETTLE_TIME = 0.35; // seconds below SETTLE_SPEED before a result is read
 const FLAT_ENOUGH = 0.9;  // cos of ~25 degrees; less than this and the die is leaning
@@ -255,7 +256,7 @@ function Die({bounds, api, onResult, onPhase, onImpact, onActivity, reducedMotio
   }).current;
 
   const ray = useMemo(() => new THREE.Raycaster(), []);
-  const plane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 1, 0), -LIFT), []);
+  const plane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), []);
   const ndc = useMemo(() => new THREE.Vector2(), []);
 
   function clampToTable(v, margin = 0.62) {
@@ -263,13 +264,23 @@ function Die({bounds, api, onResult, onPhase, onImpact, onActivity, reducedMotio
     v.z = THREE.MathUtils.clamp(v.z, -bounds.halfZ + margin, bounds.halfZ - margin);
     return v;
   }
+  /* A held die is raised high over the spot the pointer marks on the cloth,
+     so its shadow sits under the cursor or finger and the die floats above
+     it. Over the back of the table it dips just enough to stay in view. */
   function pointerToTable(clientX, clientY) {
     const r = gl.domElement.getBoundingClientRect();
     ndc.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
     ray.setFromCamera(ndc, camera);
     const hit = new THREE.Vector3();
     if (!ray.ray.intersectPlane(plane, hit)) return null;
-    return clampToTable(hit);
+    return liftOver(clampToTable(hit));
+  }
+  function liftOver(v) {
+    const p = new THREE.Vector3();
+    for (v.y = LIFT; v.y > LIFT_MIN; v.y -= 0.1) {
+      if (p.copy(v).project(camera).y < 0.8) break;
+    }
+    return v;
   }
 
   function startRolling() {
@@ -288,7 +299,7 @@ function Die({bounds, api, onResult, onPhase, onImpact, onActivity, reducedMotio
     s.touch = e.pointerType === 'touch';
     const t = b.translation();
     s.heldPos.set(t.x, t.y, t.z);
-    s.target.set(t.x, LIFT, t.z);
+    liftOver(s.target.set(t.x, 0, t.z));
     s.samples = [];
     const q = b.rotation();
     s.spin.setFromQuaternion(new THREE.Quaternion(q.x, q.y, q.z, q.w));
@@ -470,9 +481,9 @@ function Die({bounds, api, onResult, onPhase, onImpact, onActivity, reducedMotio
     const h = Math.max(0, t.y - 0.5);
     if (shadow.current) {
       shadow.current.position.set(t.x + 0.12, 0.012, t.z + 0.1);
-      const sc = 1.55 + h * 0.35;
+      const sc = 1.55 + h * 0.15;
       shadow.current.scale.set(sc, sc, 1);
-      shadow.current.material.opacity = 0.85 / (1 + h * 0.9);
+      shadow.current.material.opacity = 0.85 / (1 + h * 0.3);
     }
     if (glow.current) {
       glow.current.position.set(t.x + 0.35, 0.014, t.z + 0.45);
@@ -541,11 +552,18 @@ function CameraRig({bounds}) {
     const hf = Math.atan(Math.tan(vf) * aspect);
     const needW = (bounds.halfX + RAIL + 0.15) / Math.tan(hf);
     const needH = ((bounds.halfZ + RAIL) * Math.sin(ELEVATION) + 0.9) / Math.tan(vf);
-    const d = Math.max(needW, needH, 7.5);
     camera.fov = FOV;
-    camera.position.set(0, Math.sin(ELEVATION) * d, Math.cos(ELEVATION) * d);
-    camera.lookAt(0, 0.3, 0);
-    camera.updateProjectionMatrix();
+    camera.aspect = aspect;
+    /* Leave headroom above the back rail so a raised die stays in view. */
+    const top = new THREE.Vector3(0, LIFT + 0.3, -bounds.halfZ + 0.62);
+    let d = Math.max(needW, needH, 7.5);
+    for (let i = 0; i < 40; i++, d += 0.2) {
+      camera.position.set(0, Math.sin(ELEVATION) * d, Math.cos(ELEVATION) * d);
+      camera.lookAt(0, 0.75, 0);
+      camera.updateProjectionMatrix();
+      camera.updateMatrixWorld();
+      if (top.clone().project(camera).y < 0.92) break;
+    }
   }, [camera, size, bounds]);
   return null;
 }
