@@ -8,9 +8,13 @@ Same voice and mix as the game (`C:\lumina_dice\VOICE_SCRIPT.md`): warm, intelli
 
 Record only the quoted words. One MP3 per file name.
 
-**Put the new files in:** `C:\glass-and-fortune-website\public\audio\voice\`
+**Put the files in:** `C:\Users\dev29\OneDrive\Documents\github_hub\glass-and-fortune-website\public\audio\voice\`
 
-## New lines (10 files)
+## State, 3 Nov 2026
+
+Nine of these are **recorded and working on the site**. One is still to record: `site_morrow_dropped.mp3`. Its line is already on screen as text, so nothing looks missing until you record it; drop the file into the same folder and tell me, and I will connect it.
+
+## The lines (10 files)
 
 | File | Line | When it plays | Delivery |
 |---|---|---|---|
@@ -32,6 +36,14 @@ Record only the quoted words. One MP3 per file name.
 | `morrow_idle_05.mp3` | “You have been considering that die for some time. It remains a die.” | The visitor holds the die for a while without throwing |
 | `morrow_idle_03.mp3` | “Do not stare too deeply into the dice. They become self-conscious.” | Same, the next time |
 | `morrow_menu_first_visit.mp3` | “Ah. A new guest. I am Morrow, keeper of the table…” | Optional: the visitor clicks Morrow’s portrait in The Game section |
+
+## How it behaves on the site
+
+- He says nothing until the visitor has clicked or touched the page once. Browsers block sound before that, and nothing of his is even downloaded until he first speaks.
+- One line at a time, with at least 18 seconds between lines.
+- The speaker button under the die mutes him along with the glass.
+- Whatever he says is also written out under the die, in his own colour, so a muted visitor reads it. The roll's number and line stay where they are.
+- The invite, first pick-up, hard-throw and many-throws lines play once per visit. After the first landing, roughly one throw in four gets a landing line.
 
 ## How often
 

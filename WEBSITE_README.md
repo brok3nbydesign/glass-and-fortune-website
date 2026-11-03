@@ -76,7 +76,7 @@ Run the automatic checks (build first):
 npm test
 ```
 
-They open the site in Chrome behind the scenes, using a tool called Playwright, and check navigation, the gallery, the Steam buttons, the phone layout, the no-WebGL fallback and that the die always reports the face that is really up. The last run passed all 18 checks.
+They open the site in Chrome behind the scenes, using a tool called Playwright, and check navigation, the gallery, the Steam buttons, the phone layout, the no-WebGL fallback, carrying the die off the mat, Morrow's voice, and that the die always reports the face that is really up. The last run passed all 21 checks. If Chrome's built-in software graphics break after an update, run `TEST_GPU=1 npm test` to use the graphics card instead.
 
 ## 4. Updating the artwork and screenshots
 
@@ -110,6 +110,7 @@ When the dice look changes in the game, re-run both, then build and publish.
 - **Dropping it off the mat**: it falls out of sight. Morrow says *"That is not the mat. Shall I fetch it?"* and the button becomes **Fetch the die**, which drops it back onto the cloth. Drop it anywhere above the mat and it lands and rolls as usual.
 - **Roll the die** button does a throw from the side of the table. It is also the keyboard route (Tab to it, press Enter).
 - **The result is read from the die**, never chosen in advance: once it stops, the page checks which face's direction points most nearly straight up. The face directions are read from the model itself. If the die is leaning against a rail, it gets a gentle nudge rather than an unclear answer.
+- **Morrow talks** around the die: when it is left alone, when it is first picked up, when it lands, when it is thrown hard and after about a dozen throws. The recordings are in `public/audio/voice`, and what he says is listed in `MORROW_SITE_LINES.md` and in `MORROW_SITE` in `src/data/content.js`. He says nothing until the visitor has clicked or touched the page once, only one line plays at a time with 18 seconds between, and every line is also written out under the die so a muted visitor reads it.
 - **Sound** is the game's own synthesised glass-on-felt strike (`runtime/dice-3d-sound.js`, copied unchanged). Louder strikes sound louder, strikes are rate-limited, and nothing plays until the visitor touches the die or a button. The speaker button mutes it and the choice is remembered. There is no music.
 - **Saving power**: the 3D scene only downloads after the rest of the page has loaded, only animates while something is moving, and stops completely when scrolled off screen or in a background tab.
 - **No WebGL** (very old devices, some locked-down browsers): the opening shows a still picture of the die instead. Everything else works normally.

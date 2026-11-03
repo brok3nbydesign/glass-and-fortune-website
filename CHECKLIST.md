@@ -13,7 +13,8 @@ Progress record, so the work can be picked up again at any point.
 - [x] Steam URL, trailer ID, domain, socials in one config file; nothing links anywhere until set
 - [x] SEO: title, description, Open Graph/Twitter image, favicon, structured data, robots.txt; canonical + sitemap once the domain is set
 - [x] GitHub Actions workflow for Pages (works on github.io sub-path and custom domain)
-- [x] `npm test`: 20 checks passing at `/` and at a repository sub-path (`TEST_GPU=1` uses the graphics card)
+- [x] Morrow's nine recorded lines wired to the die, with captions and mute
+- [x] `npm test`: 21 checks passing at `/` and at a repository sub-path (`TEST_GPU=1` uses the graphics card)
 - [x] WEBSITE_README.md with publishing and Namecheap steps
 - [x] Local Git repository with the site committed
 
@@ -25,4 +26,5 @@ Progress record, so the work can be picked up again at any point.
 - [x] Domain glassandfortune.com in `SITE.url` (as https://glassandfortune.com, matching the custom domain saved on GitHub); repo brok3nbydesign/glass-and-fortune-website
 - [ ] Namecheap records and GitHub custom domain (WEBSITE_README.md section 7)
 - [ ] Official social links, if any → `SOCIAL_LINKS`
-- [ ] Look at the die on a real phone and judge the glass and the strike sound by eye and ear
+- [ ] Record `site_morrow_dropped.mp3` — “That is not the mat. Shall I fetch it?” (MORROW_SITE_LINES.md)
+- [ ] Look at the die on a real phone and judge the glass, Morrow and the strike sound by eye and ear
