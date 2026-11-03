@@ -119,6 +119,12 @@ export const RESULT_LINES = {
   6: ['A six. Throw it again.', 'A six. Watch the light move through it.'],
 };
 
+/* Morrow speaks only around the die. Recordings for these, and the rest of
+   his website lines, are listed in MORROW_SITE_LINES.md. */
+export const MORROW_SITE = {
+  dropped: 'That is not the mat. Shall I fetch it?',
+};
+
 export const FINAL_CTA = {
   title: 'The table is waiting.',
   text: 'Wishlist Glass & Fortune on Steam to hear the moment the parlour opens its doors.',

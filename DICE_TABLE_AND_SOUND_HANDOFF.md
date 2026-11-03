@@ -41,9 +41,43 @@ It is React Three Fiber + Rapier, so it can't be dropped into the game as-is (th
 - roughness 0.04, clearcoat 1, clearcoat roughness 0.03
 - ior 1.5, envMapIntensity 3.3, specular 1
 
-## 2. The sound: it's already the game's
+## 2. Making the game's five dice sound like this — one option
 
-The website's strike sound is **the game's own `runtime/dice-3d-sound.js`, copied unchanged** (`createDiceAudio`, one synthesised glass-on-felt strike per contact, no samples). The game already has the code. What the website adds is **when** it fires, from the real physics instead of a scripted roll (line 434):
+**The game already has this exact sound.** `runtime/dice-3d-sound.js` is the same file the website copied, and `runtime/dice-3d-table.js` already plays it through the game's own effects bus. It is simply switched off.
+
+### Why the game's dice do not sound like this today
+
+- `glass-and-fortune.html` attaches the 3D dice with `mod.attach({count: Math.max(5, dice.length)})` (in the bootstrap script near the end of the file).
+- In `dice-3d-table.js`, `ensureAudio()` begins `if (!options.synthRoll) return null;`. No `synthRoll`, no synthesised voice.
+- So `handle.handlesRollSound` stays `false`, and `Sfx.roll()` falls through to the three recordings `audio/sfx/dice/dice_roll_1..3.mp3`. Those takes are what you hear now.
+
+### The change
+
+Pass `synthRoll: true` in that one `attach` call:
+
+```js
+return mod.attach({count: Math.max(5, dice.length), synthRoll: true});
+```
+
+That is the whole switch. It is already wired end to end:
+
+- `ensureAudio()` builds `createDiceAudio()` on **the game's own AudioContext and effects bus** (`window.GlassDiceAudioBus()`), so the sound settings, mute and master volume keep governing it. It never opens a second context.
+- It sets `api.setImpactListener(ev => audio.impact(ev))`, so every die voices its own strikes, at the moments the renderer actually produces them — all five, independently, with a per-die detune (`spread`) so five dice are not one die five times.
+- It sets `handle.handlesRollSound = true`, and `Sfx.roll()` then skips `dice_roll_*.mp3` on its own. The two must not play together: a fixed recording lands on its own timing, the synthesised voice lands on the strikes, and together they are two sets of dice falling at different moments.
+- Loudness follows strike speed, so a hard bounce is louder than a nudge.
+
+`attach({synthRoll: true, soundVolume: 0.6})` if it comes out hot; the default is 0.75 and the website uses 0.6.
+
+### Two things to check after flipping it
+
+1. **It can fail quietly to a safe state.** `ensureAudio()` runs once, at attach, and sets `audioTried = true` before it asks for the bus. If the game's audio is not up at that moment it never tries again, `handlesRollSound` stays `false`, and you get the old mp3 takes rather than silence. After the first roll, confirm `window.GlassDice3D.handlesRollSound === true`.
+2. **It is a different sound, not a louder one.** The recordings are one event per roll; this is four to seven separate strikes per die as it settles. Judge it with five dice, not one.
+
+I have not run the game to hear this — I only read the code, and I changed nothing in `C:\lumina_dice`.
+
+## 3. The sound itself: what it is
+
+The website's strike sound is **the game's own `runtime/dice-3d-sound.js`, copied unchanged** (`createDiceAudio`, one synthesised glass-on-felt strike per contact, no samples). What the website adds is **when** it fires, from the real physics instead of a scripted roll:
 
 - A strike is any sudden change in the die's velocity of more than **1.4 units per frame** (gravity alone changes it by under 0.5).
 - Strikes are at least **55 ms apart**.
@@ -53,9 +87,14 @@ The website's strike sound is **the game's own `runtime/dice-3d-sound.js`, copie
 
 A typical roll gives 4–7 strikes, which is what makes it sound like a real die settling rather than one clack.
 
-## 3. Picking it up (new today)
+## 4. Picking it up and carrying it (website only)
 
-- A held die floats **2.5 above the cloth** (it was 1.7), over the spot the pointer marks on the table, so its shadow sits under the cursor or finger.
-- Over the back of the table it dips just enough to stay in view (never below 1.4).
-- The camera leaves a little headroom above the back rail for this.
+This part is the website's own and does not belong in the game, but the rules may be useful:
+
+- The canvas is a fixed, see-through overlay across the whole window (`pointer-events: none` on every layer), so the die can be carried anywhere on the page. It is hit-tested by hand on window `pointerdown`.
+- The camera is fitted to the hero's `.dice-frame` as if drawing inside it, then its field of view is widened to the window and the frustum shifted with `setViewOffset`, so the mat lands exactly on that frame and scrolls with it.
+- A held die sits on a plane **parallel to the screen**, at the depth it had when grabbed. So it never jumps when picked up, stays exactly under the cursor, and keeps the same size wherever it is carried. (A fixed *distance* from the camera instead would swell it towards the corners.)
+- "Over the mat" is judged **on screen**, not in the world: held high, the die is physically behind the back rail, but it plainly looks like it is above the mat, and letting go should obey the eye. The column runs from the cloth's front edge up to about one mat-height above it.
+- Let go above the mat and it comes down on the cloth and rolls. Let go anywhere else and it falls past everything, out of sight; Morrow then offers to fetch it.
 - Throw speed comes from the last 90 ms of hand movement, capped at 15. The die spins about the axis square to the throw, plus a little random wobble.
+- Two small lights are carried with the die and fade in as it leaves the mat, so the glass keeps its depth away from the lamp over the table.

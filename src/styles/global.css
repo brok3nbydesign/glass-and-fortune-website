@@ -211,10 +211,22 @@ a.btn-brass:hover::after { left: 120%; }
 /* ---------- the dice stage ---------- */
 .dice-stage { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; min-width: 0; }
 .dice-frame { position: relative; width: 100%; aspect-ratio: 16 / 10.5; max-height: 640px; }
-.dice-canvas-wrap, .dice-canvas-wrap canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; }
-.dice-canvas-wrap canvas { touch-action: pan-y; outline: none; }
-body.die-hover .dice-canvas-wrap canvas { cursor: grab; }
-body.die-held, body.die-held .dice-canvas-wrap canvas { cursor: grabbing; user-select: none; }
+/* The 3D canvas lies over the whole window, so the die can be carried off
+   the mat and down the page. It never takes pointer events — the die itself
+   is hit-tested in the scene — so every link, button and word underneath
+   behaves exactly as if it were not there. */
+.dice-canvas-wrap { position: fixed; inset: 0; z-index: 40; }
+/* Every layer of it, including the wrapper the 3D library inserts, which
+   sets pointer-events of its own. Nothing here may ever eat a click. */
+.dice-canvas-wrap, .dice-canvas-wrap * { pointer-events: none !important; }
+.dice-canvas-wrap > div { width: 100%; height: 100%; }
+.dice-canvas-wrap canvas { width: 100% !important; height: 100% !important; outline: none; }
+body.die-hover { cursor: grab; }
+body.die-held { cursor: grabbing; user-select: none; }
+.dice-speaker {
+  flex: none; font: 700 11px/1 var(--sans); font-style: normal; letter-spacing: .22em;
+  text-transform: uppercase; color: var(--brass); align-self: center;
+}
 .dice-still {
   position: absolute; inset: 0; display: grid; place-items: center;
   /* the still photo has a background, so it melts into the page instead */

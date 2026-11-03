@@ -9,11 +9,11 @@ Progress record, so the work can be picked up again at any point.
 - [x] Real 1920×1080 screenshots captured from the game (`scripts/capture-game-screenshots.mjs`)
 - [x] Web images generated from game art (`npm run images`, 2.2 MB total, loaded as needed)
 - [x] Header, hero, The Game, How to Play, Features, Trailer slot, Gallery + lightbox, closing Wishlist, footer
-- [x] Interactive glass die: pick up, carry, throw, Roll button, result read from orientation, nudge when leaning, cannot leave the table, sound with mute, still-image fallback, reduced motion, off-screen pause, deferred loading
+- [x] Interactive glass die: pick up with no jump, carry anywhere on the page, throw, drop off the mat and have Morrow fetch it, Roll button, result read from orientation, nudge when leaning, cannot leave the table, sound with mute, still-image fallback, reduced motion, off-screen pause, deferred loading
 - [x] Steam URL, trailer ID, domain, socials in one config file; nothing links anywhere until set
 - [x] SEO: title, description, Open Graph/Twitter image, favicon, structured data, robots.txt; canonical + sitemap once the domain is set
 - [x] GitHub Actions workflow for Pages (works on github.io sub-path and custom domain)
-- [x] `npm test`: 18 checks passing at `/` and at a repository sub-path
+- [x] `npm test`: 20 checks passing at `/` and at a repository sub-path (`TEST_GPU=1` uses the graphics card)
 - [x] WEBSITE_README.md with publishing and Namecheap steps
 - [x] Local Git repository with the site committed
 

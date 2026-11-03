@@ -124,32 +124,99 @@ try {
     assert.ok(seen.size >= 3, 'rolls vary');
   });
 
+  await check('The canvas over the page never swallows a click', async () => {
+    for (const sel of ['.hero-actions .btn-brass', '.site-header nav a', '.hero-logo img']) {
+      const b = await page.locator(sel).first().boundingBox();
+      const onTop = await page.evaluate(([x, y]) => {
+        const el = document.elementFromPoint(x, y);
+        return !!el && !el.closest('.dice-canvas-wrap');
+      }, [b.x + b.width / 2, b.y + b.height / 2]);
+      assert.ok(onTop, sel + ' is reachable through the overlay');
+    }
+    await page.locator('.site-header nav a').first().click({timeout: 4000});
+    /* put the hero back under the pointer for the tests that follow; the
+       link scrolls smoothly, so let it finish before overriding it */
+    await page.waitForTimeout(1200);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(1200);
+  });
+
+  await check('Carried off the mat and dropped, the die is lost and Morrow fetches it back', async () => {
+    await page.locator('.dice-frame').scrollIntoViewIfNeeded();
+    await page.waitForTimeout(400);
+    const start = await page.evaluate(() => __glassDie.inspect());
+    await page.mouse.move(start.screen[0], start.screen[1]);
+    await page.mouse.down();
+    await page.waitForTimeout(150);
+    const held = await page.evaluate(() => __glassDie.inspect());
+    const moved = Math.hypot(held.screen[0] - start.screen[0], held.screen[1] - start.screen[1]);
+    assert.ok(held.held, 'the die was picked up');
+    assert.ok(moved < 6, `picking it up does not move it (moved ${moved.toFixed(1)}px)`);
+    /* carry it to the far side of the page, well away from the mat */
+    for (const [x, y] of [[700, 420], [260, 240], [180, 700]]) {
+      await page.mouse.move(x, y, {steps: 10});
+      await page.waitForTimeout(140);
+      const at = await page.evaluate(() => __glassDie.inspect());
+      assert.ok(Math.hypot(at.screen[0] - x, at.screen[1] - y) < 8, 'the die stays under the pointer');
+    }
+    assert.equal(await page.innerText('.dice-status'), 'Drop it on the mat.', 'Morrow says where it goes');
+    await page.mouse.up();
+    await page.waitForFunction(() => __glassDie.inspect()?.lost, null, {timeout: 8000});
+    assert.match(await page.innerText('.dice-status'), /morrow/i, 'Morrow speaks up');
+    assert.equal(await page.innerText('.dice-buttons .btn'), 'Fetch the die');
+    await page.locator('.dice-buttons .btn').click();
+    await waitResult(page);
+    const back = await page.evaluate(() => __glassDie.inspect());
+    assert.equal(back.lost, false, 'the die is back');
+    assert.ok(Math.abs(back.position[0]) <= back.bounds.halfX && Math.abs(back.position[2]) <= back.bounds.halfZ, 'back on the mat');
+    assert.equal(await shown(page), upFace(back.quaternion).value, 'and it reads its face again');
+  });
+
   await check('Pick up, carry and throw with the mouse', async () => {
+    await page.locator('.dice-frame').scrollIntoViewIfNeeded();
+    await page.waitForTimeout(300);
     const start = await page.evaluate(() => __glassDie.inspect());
     const [sx, sy] = start.screen;
+    const frame = await page.locator('.dice-frame').boundingBox();
     await page.mouse.move(sx, sy);
     await page.mouse.down();
-    await page.waitForFunction(() => __glassDie.inspect().position[1] > 1.4, null, {timeout: 3000}).catch(() => {});
+    await page.waitForTimeout(150);
     const held = await page.evaluate(() => __glassDie.inspect());
     assert.equal(held.held, true, 'die is held');
-    assert.ok(held.position[1] > 1.0, 'die lifted off the table');
-    for (let k = 1; k <= 8; k++) { await page.mouse.move(sx - 30 * k, sy + 4 * k); await page.waitForTimeout(16); }
+    const jump = Math.hypot(held.screen[0] - sx, held.screen[1] - sy);
+    assert.ok(jump < 6, `picking it up does not move it (${jump.toFixed(1)}px)`);
+    /* carrying it up the screen, still over the cloth, lifts it */
+    const upY = frame.y + frame.height * 0.18;
+    await page.mouse.move(sx, upY, {steps: 10});
+    await page.waitForTimeout(250);
+    const lifted = await page.evaluate(() => __glassDie.inspect());
+    assert.ok(lifted.position[1] > start.position[1] + 0.6, `carried upwards it rises (${lifted.position[1].toFixed(2)})`);
+    assert.equal(lifted.overMat, true, 'still over the mat');
+    for (let k = 1; k <= 8; k++) { await page.mouse.move(sx - 14 * k, upY + 10 * k); await page.waitForTimeout(16); }
     await page.mouse.up();
     await waitResult(page);
     const info = await page.evaluate(() => __glassDie.inspect());
     assert.equal(info.held, false);
+    assert.equal(info.lost, false, 'thrown over the mat, it stays in play');
     assert.equal(await shown(page), upFace(info.quaternion).value);
   });
 
-  await check('A hard throw into a wall cannot lose the die', async () => {
+  await check('A hard throw across the mat cannot lose the die', async () => {
+    const frame = await page.locator('.dice-frame').boundingBox();
     const [sx, sy] = (await page.evaluate(() => __glassDie.inspect())).screen;
+    const endX = frame.x + frame.width * 0.78, endY = frame.y + frame.height * 0.42;
     await page.mouse.move(sx, sy);
     await page.mouse.down();
-    await page.waitForTimeout(200);
-    for (let k = 1; k <= 6; k++) { await page.mouse.move(sx + 160 * k, sy - 120 * k); await page.waitForTimeout(8); }
+    await page.waitForTimeout(150);
+    for (let k = 1; k <= 6; k++) {
+      await page.mouse.move(sx + (endX - sx) * k / 6, sy + (endY - sy) * k / 6);
+      await page.waitForTimeout(8);
+    }
     await page.mouse.up();
     await waitResult(page);
     const info = await page.evaluate(() => __glassDie.inspect());
+
+    assert.equal(info.lost, false, 'a hard throw over the cloth keeps the die');
     assert.ok(Math.abs(info.position[0]) <= info.bounds.halfX && Math.abs(info.position[2]) <= info.bounds.halfZ);
   });
 

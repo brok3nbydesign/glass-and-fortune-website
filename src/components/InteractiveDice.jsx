@@ -2,7 +2,7 @@
    chunk, loaded only when WebGL is available; without it the hero shows a
    still of the same die and the rest of the site is untouched. */
 import {Component, lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {RESULT_LINES, HERO} from '../data/content.js';
+import {RESULT_LINES, HERO, MORROW_SITE} from '../data/content.js';
 import {assetUrl} from '../assetUrl.js';
 import {createDiceAudio} from './dice/glassImpactSound.js';
 
@@ -58,23 +58,30 @@ export default function InteractiveDice() {
   }, [supported]);
   const [ready, setReady] = useState(false);
   const [phase, setPhase] = useState('idle');
+  /* eslint-disable-next-line no-unused-vars */
   const [result, setResult] = useState(null);
   const [visible, setVisible] = useState(true);
   const [muted, setMuted] = useState(readMuted);
   const reducedMotion = usePrefersReducedMotion();
   const box = useRef();
+  const frame = useRef();
   const audio = useRef(null);
   const lowPower = useMemo(() => matchMedia('(max-width: 760px), (pointer: coarse)').matches, []);
 
-  /* Pause physics and drawing when the table is off screen or the tab hidden. */
+  /* Pause physics and drawing when the table is off screen or the tab hidden.
+     Not while the die is in the air or in someone's hand, though: it can be
+     carried right down the page, long after the table itself has scrolled by. */
+  const [onScreen, setOnScreen] = useState(true);
+  const [hidden, setHidden] = useState(false);
   useEffect(() => {
-    let onScreen = true;
-    const update = () => setVisible(onScreen && !document.hidden);
-    const io = new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; update(); }, {threshold: 0.02});
+    const io = new IntersectionObserver(([e]) => setOnScreen(e.isIntersecting), {threshold: 0.02});
     if (box.current) io.observe(box.current);
-    document.addEventListener('visibilitychange', update);
-    return () => { io.disconnect(); document.removeEventListener('visibilitychange', update); };
+    const onVis = () => setHidden(document.hidden);
+    document.addEventListener('visibilitychange', onVis);
+    return () => { io.disconnect(); document.removeEventListener('visibilitychange', onVis); };
   }, []);
+  const inHand = phase === 'held' || phase === 'held-off' || phase === 'rolling';
+  useEffect(() => { setVisible(!hidden && (onScreen || inHand)); }, [hidden, onScreen, inHand]);
 
   useEffect(() => () => audio.current?.dispose(), []);
 
@@ -91,6 +98,7 @@ export default function InteractiveDice() {
   useEffect(() => {
     window.__glassDie = {
       roll: () => api.roll?.(),
+      fetch: () => api.fetch?.(),
       inspect: () => api.inspect?.(),
       sound: () => audio.current ? {state: audio.current.state, muted: audio.current.muted, ...audio.current.stats} : null,
     };
@@ -122,19 +130,23 @@ export default function InteractiveDice() {
     </div>
   );
 
+  const lost = phase === 'lost';
   const status = phase === 'held' ? 'Let go to throw.'
+    : phase === 'held-off' ? 'Drop it on the mat.'
     : phase === 'rolling' ? 'Tumbling…'
+    : lost ? MORROW_SITE.dropped
     : result ? result.line
     : HERO.invitation;
 
   return (
     <div className={`dice-stage${ready ? ' is-ready' : ''}`} ref={box}>
-      <div className="dice-frame">
+      <div className="dice-frame" ref={frame}>
         {supported ? (
           <SceneBoundary fallback={still}>
             <Suspense fallback={still}>
               {go ? <DiceScene
                 api={api}
+                frameRef={frame}
                 visible={visible}
                 reducedMotion={reducedMotion}
                 lowPower={lowPower}
@@ -150,14 +162,20 @@ export default function InteractiveDice() {
       </div>
 
       <div className="dice-controls">
-        <p className={`dice-status${result ? ' has-result' : ''}`} aria-live="polite">
-          {result && <span className="dice-face" aria-hidden="true">{result.value}</span>}
+        <p className={`dice-status${result ? ' has-result' : ''}${lost ? ' is-morrow' : ''}`} aria-live="polite">
+          {result && !lost && <span className="dice-face" aria-hidden="true">{result.value}</span>}
+          {lost && <span className="dice-speaker">Morrow</span>}
           <span>{supported ? status : 'A garnet die from the game, waiting for your hand.'}</span>
         </p>
         {supported && (
           <div className="dice-buttons">
-            <button type="button" className="btn btn-ghost btn-small" onClick={() => api.roll?.()} disabled={!ready || phase === 'held'}>
-              Roll the die
+            <button
+              type="button"
+              className="btn btn-ghost btn-small"
+              onClick={() => (lost ? api.fetch?.() : api.roll?.())}
+              disabled={!ready || phase === 'held' || phase === 'held-off'}
+            >
+              {lost ? 'Fetch the die' : 'Roll the die'}
             </button>
             <button type="button" className="btn-icon" onClick={toggleMute} aria-pressed={!muted} aria-label={muted ? 'Turn dice sound on' : 'Turn dice sound off'} title={muted ? 'Sound off' : 'Sound on'}>
               {muted ? (

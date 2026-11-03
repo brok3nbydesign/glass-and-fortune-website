@@ -1,6 +1,6 @@
 # Morrow on the website — voice lines
 
-Morrow speaks only around the glass die in the opening (plus one optional line when a visitor clicks his portrait). Nothing plays until the visitor has touched the die or a button, the speaker button mutes him, and every line is also shown as a caption.
+Morrow speaks only around the glass die (plus one optional line when a visitor clicks his portrait). The die can now be carried anywhere on the page, so `site_morrow_dropped.mp3` is the one that matters most: it is already on screen as text when someone drops the die off the mat. Nothing plays until the visitor has touched the die or a button, the speaker button mutes him, and every line is also shown as a caption.
 
 ## Recording
 
@@ -10,7 +10,7 @@ Record only the quoted words. One MP3 per file name.
 
 **Put the new files in:** `C:\glass-and-fortune-website\public\audio\voice\`
 
-## New lines (9 files)
+## New lines (10 files)
 
 | File | Line | When it plays | Delivery |
 |---|---|---|---|
@@ -22,6 +22,7 @@ Record only the quoted words. One MP3 per file name.
 | `site_morrow_landed_03.mp3` | “Again, if you like. It never tires of it.” | Now and then after a throw | Relaxed |
 | `site_morrow_landed_04.mp3` | “Tally wrote that down. I have no idea why.” | Now and then after a throw | Mild bafflement, fond of Tally |
 | `site_morrow_hard_throw.mp3` | “Gently. That is the only one I brought.” | A very hard throw into the rail | Mock alarm, not cross |
+| `site_morrow_dropped.mp3` | “That is not the mat. Shall I fetch it?” | The die is dropped away from the mat and falls out of sight | Unimpressed but willing; the line is on screen already |
 | `site_morrow_many_throws.mp3` | “Still throwing? The real table has five of these, and a great deal more mischief.” | Around the twelfth throw, once | Pleased, a little sly |
 
 ## Lines reused from the game (already recorded, copied automatically)
