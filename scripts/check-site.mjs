@@ -238,6 +238,32 @@ try {
     assert.ok(per >= 1 && per < 30, 'a roll is a handful of strikes, not a buzz');
   });
 
+  await check('Morrow stays silent until touched, then speaks and can be muted', async () => {
+    const fresh = await open({width: 1280, height: 860});
+    const heard = [];
+    fresh.page.on('response', r => { if (/audio\/voice\//.test(r.url())) heard.push(r.url().split('/').pop()); });
+    await fresh.page.locator('.dice-stage.is-ready').waitFor({timeout: 60000});
+    await fresh.page.waitForTimeout(500);
+    assert.equal(heard.length, 0, 'nothing of his is fetched before the visitor acts');
+    const i = await fresh.page.evaluate(() => __glassDie.inspect());
+    await fresh.page.mouse.move(i.screen[0], i.screen[1]);
+    await fresh.page.mouse.down();
+    await fresh.page.waitForTimeout(900);
+    assert.deepEqual(heard, ['site_morrow_first_pickup.mp3'], 'he speaks when the die is first picked up');
+    assert.match(await fresh.page.innerText('.dice-morrow'), /Morrow/i, 'and the line is written out');
+    await fresh.page.mouse.up();
+    await waitResult(fresh.page);
+    /* the roll's own result is still there, not replaced by his caption */
+    const info = await fresh.page.evaluate(() => __glassDie.inspect());
+    assert.equal(await shown(fresh.page), upFace(info.quaternion).value, 'the face still shows while he talks');
+    await fresh.page.locator('.dice-buttons .btn-icon').click();
+    const before = heard.length;
+    for (let k = 0; k < 3; k++) { await fresh.page.locator('.dice-buttons .btn').click(); await waitResult(fresh.page); }
+    assert.equal(heard.length, before, 'muted, he says nothing more');
+    assert.equal(await fresh.page.evaluate(() => [...document.querySelectorAll('audio')].some(a => !a.paused)), false);
+    await fresh.ctx.close();
+  });
+
   await check('Keyboard: Tab reaches Roll, Enter rolls', async () => {
     await page.locator('.dice-buttons .btn').focus();
     await page.keyboard.press('Enter');

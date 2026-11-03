@@ -223,6 +223,13 @@ a.btn-brass:hover::after { left: 120%; }
 .dice-canvas-wrap canvas { width: 100% !important; height: 100% !important; outline: none; }
 body.die-hover { cursor: grab; }
 body.die-held { cursor: grabbing; user-select: none; }
+.dice-morrow {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin: 0; min-height: 22px; max-width: 42ch; text-align: center;
+  font: italic 400 15px/1.35 var(--serif); color: var(--brass);
+  opacity: .92; text-shadow: 0 2px 10px #000;
+}
+.dice-morrow:empty, .dice-morrow > :only-child:empty { min-height: 22px; }
 .dice-speaker {
   flex: none; font: 700 11px/1 var(--sans); font-style: normal; letter-spacing: .22em;
   text-transform: uppercase; color: var(--brass); align-self: center;

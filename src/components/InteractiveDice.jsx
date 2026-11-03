@@ -5,6 +5,7 @@ import {Component, lazy, Suspense, useCallback, useEffect, useMemo, useRef, useS
 import {RESULT_LINES, HERO, MORROW_SITE} from '../data/content.js';
 import {assetUrl} from '../assetUrl.js';
 import {createDiceAudio} from './dice/glassImpactSound.js';
+import {createMorrowVoice} from './dice/morrowVoice.js';
 
 const DiceScene = lazy(() => import('./dice/DiceScene.jsx'));
 
@@ -66,6 +67,10 @@ export default function InteractiveDice() {
   const box = useRef();
   const frame = useRef();
   const audio = useRef(null);
+  const voice = useRef(null);
+  const throws = useRef(0);
+  const invites = useRef(0);
+  const [saying, setSaying] = useState(null);
   const lowPower = useMemo(() => matchMedia('(max-width: 760px), (pointer: coarse)').matches, []);
 
   /* Pause physics and drawing when the table is off screen or the tab hidden.
@@ -84,6 +89,25 @@ export default function InteractiveDice() {
   useEffect(() => { setVisible(!hidden && (onScreen || inHand)); }, [hidden, onScreen, inHand]);
 
   useEffect(() => () => audio.current?.dispose(), []);
+
+  /* Morrow. Nothing of his is fetched or played until the visitor has
+     touched the page once — browsers refuse it before that anyway. */
+  useEffect(() => {
+    const v = createMorrowVoice({muted: readMuted()});
+    v.onCaption(setSaying);
+    voice.current = v;
+    /* In the capture phase, and registered before the scene loads, so the
+       very press that picks the die up has already unlocked his voice. */
+    const allow = () => v.allow();
+    window.addEventListener('pointerdown', allow, {capture: true, once: true});
+    window.addEventListener('keydown', allow, {capture: true, once: true});
+    return () => {
+      window.removeEventListener('pointerdown', allow, {capture: true});
+      window.removeEventListener('keydown', allow, {capture: true});
+      v.dispose();
+      voice.current = null;
+    };
+  }, []);
 
   /* The scene and these controls talk through one small object. */
   const api = useMemo(() => ({
@@ -105,15 +129,37 @@ export default function InteractiveDice() {
     return () => { delete window.__glassDie; };
   }, [api]);
 
-  const onImpact = useCallback(strength => { audio.current?.impact({strength}); }, []);
+  const onImpact = useCallback(strength => {
+    audio.current?.impact({strength});
+    /* A good hard crack against the rail earns a word about it. */
+    if (strength > 0.85) voice.current?.say(MORROW_SITE.hardThrow, {once: true});
+  }, []);
   const onResult = useCallback(value => {
     const lines = RESULT_LINES[value];
     setResult({value, line: lines[Math.floor(Math.random() * lines.length)]});
+    const n = ++throws.current;
+    const v = voice.current;
+    if (!v) return;
+    if (n === 12) v.say(MORROW_SITE.manyThrows, {once: true, gap: 0});
+    else if (n === 1 || Math.random() < 0.25) {
+      v.say(MORROW_SITE.landed[n === 1 ? 0 : Math.floor(Math.random() * MORROW_SITE.landed.length)]);
+    }
   }, []);
   const onPhase = useCallback(p => {
     setPhase(p);
     if (p !== 'settled') setResult(null);
+    if (p === 'held' || p === 'held-off') voice.current?.say(MORROW_SITE.firstPickup, {once: true, gap: 0});
   }, []);
+
+  /* Left alone with the die, he suggests picking it up. Twice, at most. */
+  useEffect(() => {
+    if (!ready || !onScreen || result || phase !== 'idle') return undefined;
+    const t = setTimeout(() => {
+      const line = MORROW_SITE.invite[invites.current];
+      if (line && voice.current?.say(line, {once: true})) invites.current++;
+    }, 11000);
+    return () => clearTimeout(t);
+  }, [ready, onScreen, result, phase]);
   const onReady = useCallback(() => setReady(true), []);
 
   const toggleMute = () => {
@@ -121,6 +167,7 @@ export default function InteractiveDice() {
     setMuted(next);
     try { localStorage.setItem('gf-site-muted', next ? '1' : '0'); } catch { /* private mode */ }
     audio.current?.setMuted(next);
+    voice.current?.setMuted(next);
     if (!next) api.unlockSound();
   };
 
@@ -134,7 +181,7 @@ export default function InteractiveDice() {
   const status = phase === 'held' ? 'Let go to throw.'
     : phase === 'held-off' ? 'Drop it on the mat.'
     : phase === 'rolling' ? 'Tumbling…'
-    : lost ? MORROW_SITE.dropped
+    : lost ? MORROW_SITE.dropped.text
     : result ? result.line
     : HERO.invitation;
 
@@ -166,6 +213,12 @@ export default function InteractiveDice() {
           {result && !lost && <span className="dice-face" aria-hidden="true">{result.value}</span>}
           {lost && <span className="dice-speaker">Morrow</span>}
           <span>{supported ? status : 'A garnet die from the game, waiting for your hand.'}</span>
+        </p>
+        {/* What Morrow is saying out loud, written out underneath, so a
+            muted visitor gets the line too. The row keeps its height so
+            nothing on the page jumps when he speaks. */}
+        <p className="dice-morrow" aria-live="polite">
+          {saying && <><span className="dice-speaker">Morrow</span><span>{saying}</span></>}
         </p>
         {supported && (
           <div className="dice-buttons">

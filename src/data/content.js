@@ -119,10 +119,26 @@ export const RESULT_LINES = {
   6: ['A six. Throw it again.', 'A six. Watch the light move through it.'],
 };
 
-/* Morrow speaks only around the die. Recordings for these, and the rest of
-   his website lines, are listed in MORROW_SITE_LINES.md. */
+/* Morrow speaks only around the die. `file` is the recording in
+   public/audio/voice; the text is also shown, so a muted or still-silent
+   visitor reads the same line. A line with no file is text only.
+   The full list, with recording notes, is in MORROW_SITE_LINES.md. */
 export const MORROW_SITE = {
-  dropped: 'That is not the mat. Shall I fetch it?',
+  invite: [
+    {file: 'site_morrow_invite_01', text: 'Go on. Pick it up. It doesn’t bite.'},
+    {file: 'site_morrow_invite_02', text: 'You may pick it up, you know. That is what it’s for.'},
+  ],
+  firstPickup: {file: 'site_morrow_first_pickup', text: 'There. Now throw it. Gently, or not. The table has seen worse.'},
+  landed: [
+    {file: 'site_morrow_landed_01', text: 'No prophecy. Just a very good throw.'},
+    {file: 'site_morrow_landed_02', text: 'It landed. Glass usually does, eventually.'},
+    {file: 'site_morrow_landed_03', text: 'Again, if you like. It never tires of it.'},
+    {file: 'site_morrow_landed_04', text: 'Tally wrote that down. I have no idea why.'},
+  ],
+  hardThrow: {file: 'site_morrow_hard_throw', text: 'Gently. That is the only one I brought.'},
+  manyThrows: {file: 'site_morrow_many_throws', text: 'Still throwing? The real table has five of these, and a great deal more mischief.'},
+  /* Not recorded yet: shown as text when the die is dropped off the mat. */
+  dropped: {text: 'That is not the mat. Shall I fetch it?'},
 };
 
 export const FINAL_CTA = {
