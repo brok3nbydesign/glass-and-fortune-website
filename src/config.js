@@ -5,7 +5,7 @@ export const SITE = {
   title: 'Glass & Fortune',
   /* Your custom domain once it is connected, e.g. 'https://example.com'.
      Leave empty until then; canonical links and the sitemap use it. */
-  url: 'https://www.glassandfortune.com',
+  url: 'https://glassandfortune.com',
 };
 
 /* The public Steam store page, e.g.

@@ -22,7 +22,7 @@ Progress record, so the work can be picked up again at any point.
 - [ ] Steam store URL → `STEAM_URL` in `src/config.js`
 - [ ] Trailer on YouTube → `TRAILER_YOUTUBE_ID`
 - [ ] GitHub repository created and the folder pushed; Pages source set to GitHub Actions
-- [x] Domain glassandfortune.com in `SITE.url` (as https://www.glassandfortune.com); repo brok3nbydesign/glass-and-fortune-website
+- [x] Domain glassandfortune.com in `SITE.url` (as https://glassandfortune.com, matching the custom domain saved on GitHub); repo brok3nbydesign/glass-and-fortune-website
 - [ ] Namecheap records and GitHub custom domain (WEBSITE_README.md section 7)
 - [ ] Official social links, if any → `SOCIAL_LINKS`
 - [ ] Look at the die on a real phone and judge the glass and the strike sound by eye and ear
