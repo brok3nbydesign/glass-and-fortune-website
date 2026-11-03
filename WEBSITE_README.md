@@ -137,7 +137,7 @@ Do these in order. GitHub asks that the domain be added on GitHub **before** the
 
 ### a. (Recommended) verify the domain with GitHub
 
-GitHub → your profile picture → **Settings → Pages → Add a domain**. Enter the domain. GitHub shows one **TXT** record; add it in Namecheap (step c, type **TXT**, host and value exactly as GitHub shows), wait a few minutes, then press **Verify**. This stops anyone else's GitHub site from using your domain.
+The repository belongs to the **brok3nbydesign** organisation, so this is done in the organisation: github.com/brok3nbydesign → **Settings → Pages → Add a domain** (under "Verified domains"). Enter the domain. GitHub shows one **TXT** record; add it in Namecheap (step c, type **TXT**, host and value exactly as GitHub shows), wait a few minutes, then press **Verify**. This stops anyone else's GitHub site from using your domain.
 
 ### b. Add the domain to the website repository
 
@@ -159,7 +159,7 @@ Add, using **Add New Record**:
 | A Record | `@` | `185.199.111.153` | Automatic |
 | CNAME Record | `www` | `YOUR-USERNAME.github.io` | Automatic |
 
-Replace `YOUR-USERNAME` with your GitHub username (or organisation name). Do **not** add the repository name to it, and do not add a `*` (wildcard) record. Press the green **Save All Changes** button.
+Replace `YOUR-USERNAME` with the account that owns the repository: for this site that is `brok3nbydesign`, so the value is `brok3nbydesign.github.io`. Do **not** add the repository name to it, and do not add a `*` (wildcard) record. Press the green **Save All Changes** button.
 
 Optional, for visitors on IPv6 — four **AAAA Records**, host `@`: `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153`.
 
