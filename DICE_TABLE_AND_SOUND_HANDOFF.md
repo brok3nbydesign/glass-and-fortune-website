@@ -22,7 +22,7 @@ It is React Three Fiber + Rapier, so it can't be dropped into the game as-is (th
 - 90 long wavy grain lines: 60 % dark `rgba(20,10,4,0.25–0.6)` and 40 % light `rgba(140,90,52,0.12–0.32)`, width 0.6–2.8 px, made from two sine waves so the grain drifts and pinches like quarter-sawn walnut.
 - Rails: 0.55 wide, 0.42 tall, standing **exactly on the physics walls**, so every bounce visibly hits wood. Material: roughness 0.42, metalness 0.05, colour `#d8b490`.
 - Brass inlay strip along the top inner edge of each rail: 0.045 wide, 0.012 thick, `#d6aa62`, metalness 1, roughness 0.3.
-- Beyond the rails, a larger walnut plane (the same painting repeated 3 × 6, colour `#8a6a52`) so the table carries on into the dark.
+- Nothing beyond the rails: the mat floats on the page. The canvas is see-through (`alpha: true`, clear colour fully transparent), and the camera frames the whole mat with a margin so no edge is cut.
 - Play area: 3.5 deep, width following the frame's shape (3.5 to 8.4). The die is about 0.76 across.
 
 **Light** (`Atmosphere`, line 158). The light is half of why the mat reads as it does:
@@ -31,7 +31,7 @@ It is React Three Fiber + Rapier, so it can't be dropped into the game as-is (th
 - A warm lamp: spot light `#ffc98a`, intensity 520, at (−3, 8, 3), angle 0.7, penumbra 0.9, decay 2. It pools on the cloth.
 - A cool rim light: directional `#9fb6ff`, 1.1, from behind at (3, 4, −6). It draws the glass edges.
 - A candle glint: point light `#fff1d6`, 22, at (1.5, 5.5, 4.5), distance 14, decay 2. This puts the bright spark in the glass.
-- Renderer: ACES Filmic tone mapping, exposure 1.3, clear colour `#0d0809`.
+- Renderer: ACES Filmic tone mapping, exposure 1.3, transparent background.
 - Shadows: no shadow maps. A soft dark radial blob under the die (larger and fainter as it rises), plus an additive garnet glow on the cloth beside it, which is the coloured light the glass throws.
 - Camera: FOV 30, looking down at 52°.
 

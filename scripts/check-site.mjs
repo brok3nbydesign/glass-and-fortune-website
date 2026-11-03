@@ -35,7 +35,11 @@ const server = http.createServer((req, res) => {
 await new Promise(r => server.listen(0, '127.0.0.1', r));
 const url = `http://127.0.0.1:${server.address().port}${base}`;
 
-const browser = await chromium.launch({headless: true, channel: 'chrome', args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--autoplay-policy=no-user-gesture-required']});
+/* Software graphics by default, so the checks behave the same on any machine.
+   TEST_GPU=1 uses the real graphics card instead, for when a Chrome update
+   breaks software rendering. */
+const gpuArgs = process.env.TEST_GPU ? [] : ['--enable-unsafe-swiftshader', '--use-angle=swiftshader'];
+const browser = await chromium.launch({headless: true, channel: 'chrome', args: [...gpuArgs, '--autoplay-policy=no-user-gesture-required']});
 let passed = 0;
 async function check(name, fn) {
   await fn();

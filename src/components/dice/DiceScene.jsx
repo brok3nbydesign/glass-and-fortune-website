@@ -44,8 +44,9 @@ export function boundsFor(aspect) {
 }
 
 /* ---------- table ----------
-   A card table: navy velvet baize, the cloth of the round table in Morrow's
-   parlour, inside walnut rails with a brass inlay. The rails stand exactly
+   A card-table mat: navy velvet baize, the cloth of the round table in
+   Morrow's parlour, inside walnut rails with a brass inlay, floating on the
+   page with nothing around it. The rails stand exactly
    where the invisible walls are, so every bounce has something to hit.
    Textures are painted at load, so nothing extra is downloaded. */
 const RAIL = 0.55;
@@ -110,16 +111,9 @@ function Table({bounds}) {
   /* one painting stretched over the cloth: tiling showed a seam */
   const velvet = useMemo(() => canvasTexture(1024, 640, paintVelvet), []);
   const walnut = useMemo(() => canvasTexture(1024, 256, paintWalnut), []);
-  const walnutFar = useMemo(() => {
-    const t = walnut.clone();
-    t.wrapS = t.wrapT = THREE.RepeatWrapping;
-    t.repeat.set(3, 6);
-    t.needsUpdate = true;
-    return t;
-  }, [walnut]);
-  useEffect(() => () => { velvet.dispose(); walnut.dispose(); walnutFar.dispose(); }, [velvet, walnut, walnutFar]);
+  useEffect(() => () => { velvet.dispose(); walnut.dispose(); }, [velvet, walnut]);
 
-  const outerX = halfX + RAIL, outerZ = halfZ + RAIL;
+  const outerX = halfX + RAIL;
   const rails = [
     {pos: [0, RAIL_H / 2, -halfZ - RAIL / 2], size: [outerX * 2, RAIL_H, RAIL], inlay: [0, RAIL_H + 0.004, -halfZ - 0.1], inlaySize: [halfX * 2 + 0.2, 0.012, 0.045]},
     {pos: [0, RAIL_H / 2, halfZ + RAIL / 2], size: [outerX * 2, RAIL_H, RAIL], inlay: [0, RAIL_H + 0.004, halfZ + 0.1], inlaySize: [halfX * 2 + 0.2, 0.012, 0.045]},
@@ -145,11 +139,6 @@ function Table({bounds}) {
           </mesh>
         </group>
       ))}
-      {/* the rest of the table, beyond the rails */}
-      <mesh rotation-x={-Math.PI / 2} position={[0, -0.01, 0]}>
-        <planeGeometry args={[outerX * 2 + 14, outerZ * 2 + 10]} />
-        <meshStandardMaterial map={walnutFar} roughness={0.5} color="#8a6a52" />
-      </mesh>
     </group>
   );
 }
@@ -543,26 +532,26 @@ function Bounds({bounds}) {
   );
 }
 
-/* Frame the play area for whatever shape the canvas is. */
+/* Frame the whole mat, rails and all, with a margin, since it floats on the
+   page and any cut edge would show; plus headroom above the back rail so a
+   raised die stays in view. */
 function CameraRig({bounds}) {
   const {camera, size} = useThree();
   useEffect(() => {
-    const aspect = size.width / Math.max(1, size.height);
-    const vf = THREE.MathUtils.degToRad(FOV) / 2;
-    const hf = Math.atan(Math.tan(vf) * aspect);
-    const needW = (bounds.halfX + RAIL + 0.15) / Math.tan(hf);
-    const needH = ((bounds.halfZ + RAIL) * Math.sin(ELEVATION) + 0.9) / Math.tan(vf);
+    const ox = bounds.halfX + RAIL, oz = bounds.halfZ + RAIL;
+    const points = [
+      ...[-1, 1].flatMap(sx => [-1, 1].flatMap(sz => [0, RAIL_H].map(y => new THREE.Vector3(sx * ox, y, sz * oz)))),
+      new THREE.Vector3(0, LIFT + 0.3, -bounds.halfZ + 0.62),
+    ];
+    const p = new THREE.Vector3();
     camera.fov = FOV;
-    camera.aspect = aspect;
-    /* Leave headroom above the back rail so a raised die stays in view. */
-    const top = new THREE.Vector3(0, LIFT + 0.3, -bounds.halfZ + 0.62);
-    let d = Math.max(needW, needH, 7.5);
-    for (let i = 0; i < 40; i++, d += 0.2) {
+    camera.aspect = size.width / Math.max(1, size.height);
+    for (let d = 7.5; d < 40; d += 0.1) {
       camera.position.set(0, Math.sin(ELEVATION) * d, Math.cos(ELEVATION) * d);
-      camera.lookAt(0, 0.75, 0);
+      camera.lookAt(0, 0.55, 0);
       camera.updateProjectionMatrix();
       camera.updateMatrixWorld();
-      if (top.clone().project(camera).y < 0.92) break;
+      if (points.every(v => { p.copy(v).project(camera); return Math.abs(p.x) < 0.94 && Math.abs(p.y) < 0.94; })) break;
     }
   }, [camera, size, bounds]);
   return null;
@@ -594,12 +583,13 @@ export default function DiceScene({api, onResult, onPhase, onImpact, onReady, vi
       <Canvas
         frameloop={frameloop}
         dpr={[1, Math.min(maxDpr, window.devicePixelRatio || 1)]}
-        gl={{antialias: true, alpha: false, powerPreference: 'high-performance'}}
+        gl={{antialias: true, alpha: true, powerPreference: 'high-performance'}}
         camera={{fov: FOV, near: 0.5, far: 60, position: [0, 8, 6]}}
         onCreated={({gl}) => {
           gl.toneMapping = THREE.ACESFilmicToneMapping;
           gl.toneMappingExposure = 1.3;
-          gl.setClearColor('#0d0809');
+          /* see-through: the mat floats on the page, with no box around it */
+          gl.setClearColor('#000000', 0);
         }}
         aria-hidden="true"
       >

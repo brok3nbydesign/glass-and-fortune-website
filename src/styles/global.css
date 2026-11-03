@@ -210,17 +210,17 @@ a.btn-brass:hover::after { left: 120%; }
 
 /* ---------- the dice stage ---------- */
 .dice-stage { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; min-width: 0; }
-.dice-frame {
-  position: relative; width: 100%; aspect-ratio: 16 / 10.5; max-height: 640px;
-  /* the table melts into the parlour rather than sitting in a box */
-  -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%);
-          mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%);
-}
+.dice-frame { position: relative; width: 100%; aspect-ratio: 16 / 10.5; max-height: 640px; }
 .dice-canvas-wrap, .dice-canvas-wrap canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; }
 .dice-canvas-wrap canvas { touch-action: pan-y; outline: none; }
 body.die-hover .dice-canvas-wrap canvas { cursor: grab; }
 body.die-held, body.die-held .dice-canvas-wrap canvas { cursor: grabbing; user-select: none; }
-.dice-still { position: absolute; inset: 0; display: grid; place-items: center; }
+.dice-still {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  /* the still photo has a background, so it melts into the page instead */
+  -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%);
+          mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%);
+}
 .dice-still img { width: 100%; height: 100%; object-fit: cover; }
 .dice-loading {
   position: absolute; left: 0; right: 0; bottom: 18%; margin: 0; text-align: center;
@@ -230,7 +230,7 @@ body.die-held, body.die-held .dice-canvas-wrap canvas { cursor: grabbing; user-s
 @keyframes warm { from { opacity: .35; } to { opacity: .85; } }
 .dice-stage .dice-frame { opacity: .0; transition: opacity .9s ease; }
 .dice-stage .dice-frame:has(.dice-still), .dice-stage.is-ready .dice-frame { opacity: 1; }
-.dice-controls { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: -26px; position: relative; z-index: 2; }
+.dice-controls { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 6px; position: relative; z-index: 2; }
 .dice-status {
   display: inline-flex; align-items: center; gap: 12px; min-height: 40px; margin: 0;
   font: italic 400 clamp(18px, 1.8vw, 22px)/1.3 var(--serif); color: #f3e6cc; text-align: center;
@@ -262,7 +262,7 @@ body.die-held, body.die-held .dice-canvas-wrap canvas { cursor: grabbing; user-s
 @media (max-width: 480px) {
   .hero-actions .btn { width: 100%; }
   .dice-frame { aspect-ratio: 1 / 1.02; }
-  .dice-controls { margin-top: -18px; }
+  .dice-controls { margin-top: 4px; }
 }
 
 /* ---------- overview ---------- */
