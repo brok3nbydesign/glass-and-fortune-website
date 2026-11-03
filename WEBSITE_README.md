@@ -121,11 +121,10 @@ The site publishes itself each time you upload changes to GitHub. You need a Git
 
 ### First time
 
-1. On GitHub choose **+ → New repository**. Name it `glass-and-fortune-website`, choose **Public**, and **don't** add a README (this folder already has one). Create it.
-   A public repository lets anyone see this website's code and images — which is fine, they're already on the public site. **Never upload the game folder (`C:\lumina_dice`) to it.**
-2. In the repository open **Settings → Pages**. Under **Build and deployment → Source**, choose **GitHub Actions**.
-3. Upload this folder. The easiest way is **GitHub Desktop**: *File → Add local repository*, choose `C:\glass-and-fortune-website` (it is already a Git repository with the site committed), then **Publish repository**, keeping the name `glass-and-fortune-website`. Untick "Keep this code private" if you want it public.
-4. Open the repository's **Actions** tab. A run called **Deploy website** builds and publishes the site (a few minutes). A green tick means it worked; a red cross shows exactly which step failed.
+1. Open **GitHub Desktop** and choose **File → Add local repository**. Pick `C:\glass-and-fortune-website`. It is already a Git repository with the site committed, so **don't** use "New repository" and don't create one on github.com first.
+2. Press **Publish repository**. Keep the name `glass-and-fortune-website` and **untick "Keep this code private"**: on a free GitHub account, Pages only publishes public repositories. Anyone can then see this website's code and images, which is fine, they're already on the public site. **Never add the game folder (`C:\lumina_dice`) to it.**
+3. On github.com open the new repository → **Settings → Pages**. Under **Build and deployment → Source**, choose **GitHub Actions**.
+4. Open the **Actions** tab. The first **Deploy website** run probably failed, because Pages wasn't switched on yet when it started. Open it and press **Re-run all jobs** (or choose **Deploy website → Run workflow**). It takes a few minutes. A green tick means it worked; a red cross shows exactly which step failed.
 5. Your test address is **https://YOUR-USERNAME.github.io/glass-and-fortune-website/** (Settings → Pages shows it).
 
 ### Every update afterwards
