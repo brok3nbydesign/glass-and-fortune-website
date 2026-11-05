@@ -169,7 +169,7 @@ const SDF_GLSL = /* glsl */`
 function glassTopMaterial(velvet, uniforms, steps) {
   const m = new THREE.MeshPhysicalMaterial({
     map: velvet, color: '#a3acd6', roughness: 0.95, metalness: 0,
-    clearcoat: 1, clearcoatRoughness: 0.035, envMapIntensity: 0.22,
+    clearcoat: 0.3, clearcoatRoughness: 0.035, envMapIntensity: 0.08,
   });
   m.onBeforeCompile = shader => {
     Object.assign(shader.uniforms, uniforms);
@@ -194,7 +194,7 @@ function glassTopMaterial(velvet, uniforms, steps) {
         reflectedLight.directDiffuse *= mix(1.0, gfAO, 0.55);
         reflectedLight.directSpecular *= mix(1.0, gfAO, 0.5);
         /* a little of the garnet the lit glass scatters onto the cloth */
-        totalEmissiveRadiance += uGlow * 0.05 * exp(-gfD / 0.22);`)
+        totalEmissiveRadiance += uGlow * 0.11 * exp(-gfD / 0.3);`)
       .replace('#include <opaque_fragment>', `
         {
           /* the reflection, sharp but faint: glass reflects about 4% at
