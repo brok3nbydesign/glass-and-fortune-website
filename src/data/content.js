@@ -137,6 +137,9 @@ export const MORROW_SITE = {
   ],
   hardThrow: {file: 'site_morrow_hard_throw', text: 'Gently. That is the only one I brought.'},
   manyThrows: {file: 'site_morrow_many_throws', text: 'Still throwing? The real table has five of these, and a great deal more mischief.'},
+  /* Shown when the die comes to rest leaning on a rail, no face up. The
+     physics is left to decide that, so now and then it happens. */
+  cocked: {text: 'Cocked against the rail. That one doesn’t count — throw it again.'},
   /* Not recorded yet: shown as text when the die is dropped off the mat. */
   dropped: {text: 'That is not the mat. Shall I fetch it?'},
 };

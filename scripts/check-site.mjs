@@ -75,6 +75,24 @@ async function open(viewport, opts = {}) {
 }
 const noOverflow = page => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
 const waitResult = page => page.locator('.dice-face').waitFor({timeout: 40000});
+/* At rest: either a face is read, or the die is cocked against a rail (real
+   physics allows it; nothing pushes it flat). */
+const waitRest = page => page.waitForFunction(() => __glassDie.inspect()?.settled && !__glassDie.inspect().held
+  && ['settled', 'cocked'].includes(document.querySelector('.dice-stage')?.dataset.phase), null, {timeout: 40000});
+async function restedReadsTrue(page, label) {
+  const info = await page.evaluate(() => __glassDie.inspect());
+  const phase = await page.locator('.dice-stage').getAttribute('data-phase');
+  const top = upFace(info.quaternion);
+  if (phase === 'cocked') {
+    assert.ok(top.dot < 0.9, `${label}: called cocked only when no face is up (${top.dot.toFixed(3)})`);
+    assert.equal(await page.locator('.dice-face').count(), 0, `${label}: no number shown when cocked`);
+    assert.match(await page.innerText('.dice-status'), /cocked/i);
+  } else {
+    assert.ok(top.dot > 0.9, `${label}: die is flat (${top.dot.toFixed(3)})`);
+    assert.equal(await shown(page), top.value, `${label}: shown number is the up face`);
+  }
+  return {phase, top, info};
+}
 const shown = async page => Number(await page.locator('.dice-face').textContent());
 
 try {
@@ -108,20 +126,19 @@ try {
 
   await check(`Roll button: ${ROLLS} rolls, every result matches the face pointing up`, async () => {
     const seen = new Set();
+    let cocked = 0;
     for (let i = 0; i < ROLLS; i++) {
       await page.locator('.dice-buttons .btn').click();
-      await page.locator('.dice-face').waitFor({state: 'detached', timeout: 5000}).catch(() => {});
-      await waitResult(page);
-      const info = await page.evaluate(() => __glassDie.inspect());
-      const top = upFace(info.quaternion);
-      assert.ok(top.dot > 0.9, `roll ${i}: die is flat (${top.dot.toFixed(3)})`);
-      assert.equal(await shown(page), top.value, `roll ${i}: shown number is the up face`);
+      await page.waitForFunction(() => document.querySelector('.dice-stage').dataset.phase === 'rolling', null, {timeout: 5000}).catch(() => {});
+      await waitRest(page);
+      const {phase, top, info} = await restedReadsTrue(page, `roll ${i}`);
       const [x, , z] = info.position;
-      assert.ok(Math.abs(x) <= info.bounds.halfX && Math.abs(z) <= info.bounds.halfZ, `roll ${i}: die stayed on the table`);
-      seen.add(top.value);
+      assert.ok(Math.abs(x) <= info.bounds.halfX && Math.abs(z) <= info.bounds.halfZ, `roll ${i}: die stayed on the cloth`);
+      if (phase === 'cocked') cocked++; else seen.add(top.value);
     }
-    console.log('     faces seen:', [...seen].sort().join(' '));
+    console.log('     faces seen:', [...seen].sort().join(' '), cocked ? `(cocked ${cocked})` : '');
     assert.ok(seen.size >= 3, 'rolls vary');
+    assert.ok(cocked <= Math.max(1, ROLLS / 6), 'cocked dice are rare');
   });
 
   await check('The canvas over the page never swallows a click', async () => {
@@ -153,11 +170,13 @@ try {
     assert.ok(held.held, 'the die was picked up');
     assert.ok(moved < 6, `picking it up does not move it (moved ${moved.toFixed(1)}px)`);
     /* carry it to the far side of the page, well away from the mat */
+    /* held by the point that was touched: that point stays under the pointer */
     for (const [x, y] of [[700, 420], [260, 240], [180, 700]]) {
       await page.mouse.move(x, y, {steps: 10});
-      await page.waitForTimeout(140);
+      await page.waitForTimeout(400);
       const at = await page.evaluate(() => __glassDie.inspect());
-      assert.ok(Math.hypot(at.screen[0] - x, at.screen[1] - y) < 8, 'the die stays under the pointer');
+      const off = Math.hypot(at.grip[0] - x, at.grip[1] - y);
+      assert.ok(off < 8, `the die stays under the pointer (${off.toFixed(1)}px)`);
     }
     assert.equal(await page.innerText('.dice-status'), 'Drop it on the mat.', 'Morrow says where it goes');
     await page.mouse.up();
@@ -165,7 +184,7 @@ try {
     assert.match(await page.innerText('.dice-status'), /morrow/i, 'Morrow speaks up');
     assert.equal(await page.innerText('.dice-buttons .btn'), 'Fetch the die');
     await page.locator('.dice-buttons .btn').click();
-    await waitResult(page);
+    await waitRest(page);
     const back = await page.evaluate(() => __glassDie.inspect());
     assert.equal(back.lost, false, 'the die is back');
     assert.ok(Math.abs(back.position[0]) <= back.bounds.halfX && Math.abs(back.position[2]) <= back.bounds.halfZ, 'back on the mat');
@@ -194,14 +213,13 @@ try {
     assert.equal(lifted.overMat, true, 'still over the mat');
     for (let k = 1; k <= 8; k++) { await page.mouse.move(sx - 14 * k, upY + 10 * k); await page.waitForTimeout(16); }
     await page.mouse.up();
-    await waitResult(page);
-    const info = await page.evaluate(() => __glassDie.inspect());
+    await waitRest(page);
+    const {info} = await restedReadsTrue(page, 'thrown');
     assert.equal(info.held, false);
     assert.equal(info.lost, false, 'thrown over the mat, it stays in play');
-    assert.equal(await shown(page), upFace(info.quaternion).value);
   });
 
-  await check('A hard throw across the mat cannot lose the die', async () => {
+  await check('A hard throw is limited; if it clears a rail it falls, and Morrow fetches it', async () => {
     const frame = await page.locator('.dice-frame').boundingBox();
     const [sx, sy] = (await page.evaluate(() => __glassDie.inspect())).screen;
     const endX = frame.x + frame.width * 0.78, endY = frame.y + frame.height * 0.42;
@@ -213,11 +231,36 @@ try {
       await page.waitForTimeout(8);
     }
     await page.mouse.up();
-    await waitResult(page);
-    const info = await page.evaluate(() => __glassDie.inspect());
+    const v = (await page.evaluate(() => __glassDie.inspect())).released.linvel;
+    assert.ok(Math.hypot(...v) <= 8.6, `release speed is limited (${Math.hypot(...v).toFixed(2)})`);
+    await page.waitForFunction(() => ['settled', 'cocked', 'lost'].includes(document.querySelector('.dice-stage').dataset.phase), null, {timeout: 40000});
+    if (await page.locator('.dice-stage').getAttribute('data-phase') === 'lost') {
+      console.log('     the throw cleared a rail; fetching');
+      await page.locator('.dice-buttons .btn').click();
+      await waitRest(page);
+    }
+    const {info} = await restedReadsTrue(page, 'after the hard throw');
+    assert.equal(info.lost, false);
+  });
 
-    assert.equal(info.lost, false, 'a hard throw over the cloth keeps the die');
-    assert.ok(Math.abs(info.position[0]) <= info.bounds.halfX && Math.abs(info.position[2]) <= info.bounds.halfZ);
+  await check('The rails are solid: a die over the outer edge tips off, one on top stays', async () => {
+    const b = (await page.evaluate(() => __glassDie.inspect())).bounds;
+    const edge = b.halfX + 0.55, top = 0.8 + 0.5 + 0.002;
+    /* centre 0.15 past the outer edge of the right rail: falls */
+    await page.evaluate(([x, y]) => __glassDie.pose({p: [x, y, 0], q: [0, 0, 0, 1]}), [edge + 0.15, top]);
+    await page.waitForFunction(() => __glassDie.inspect().lost, null, {timeout: 15000});
+    await page.locator('.dice-buttons .btn').click();
+    await waitRest(page);
+    /* centre on the middle of the rail: it rests up there, flat */
+    await page.evaluate(([x, y]) => __glassDie.pose({p: [x, y, 0], q: [0, 0, 0, 1]}), [edge - 0.275, top]);
+    await waitRest(page);
+    const {info} = await restedReadsTrue(page, 'on the rail');
+    assert.ok(info.position[1] > 1.2, `resting on top of the rail (y ${info.position[1].toFixed(2)})`);
+    /* balanced on an edge on the cloth, leaning a hair: it falls and reads */
+    await page.evaluate(() => __glassDie.pose({p: [0, 0.66, 0], q: [0, 0, Math.sin((Math.PI / 4 + 0.02) / 2), Math.cos((Math.PI / 4 + 0.02) / 2)]}));
+    await waitRest(page);
+    const fell = await restedReadsTrue(page, 'from an edge');
+    assert.ok(fell.info.position[0] < -0.1, 'it fell the way it leaned');
   });
 
   await check('Impact sound plays per strike, is rate limited, and mutes', async () => {
@@ -227,12 +270,12 @@ try {
     assert.equal(await page.evaluate(() => localStorage.getItem('gf-site-muted')), '1');
     const before = (await page.evaluate(() => __glassDie.sound())).impacts;
     await page.locator('.dice-buttons .btn').click();
-    await waitResult(page);
+    await waitRest(page);
     assert.equal((await page.evaluate(() => __glassDie.sound())).impacts, before, 'muted roll is silent');
     await page.locator('.dice-buttons .btn-icon').click();
     const t0 = (await page.evaluate(() => __glassDie.sound())).impacts;
     await page.locator('.dice-buttons .btn').click();
-    await waitResult(page);
+    await waitRest(page);
     const per = (await page.evaluate(() => __glassDie.sound())).impacts - t0;
     console.log('     strikes voiced in one roll:', per);
     assert.ok(per >= 1 && per < 30, 'a roll is a handful of strikes, not a buzz');
@@ -252,13 +295,13 @@ try {
     assert.deepEqual(heard, ['site_morrow_first_pickup.mp3'], 'he speaks when the die is first picked up');
     assert.match(await fresh.page.innerText('.dice-morrow'), /Morrow/i, 'and the line is written out');
     await fresh.page.mouse.up();
-    await waitResult(fresh.page);
+    await waitRest(fresh.page);
     /* the roll's own result is still there, not replaced by his caption */
     const info = await fresh.page.evaluate(() => __glassDie.inspect());
     assert.equal(await shown(fresh.page), upFace(info.quaternion).value, 'the face still shows while he talks');
     await fresh.page.locator('.dice-buttons .btn-icon').click();
     const before = heard.length;
-    for (let k = 0; k < 3; k++) { await fresh.page.locator('.dice-buttons .btn').click(); await waitResult(fresh.page); }
+    for (let k = 0; k < 3; k++) { await fresh.page.locator('.dice-buttons .btn').click(); await waitRest(fresh.page); }
     assert.equal(heard.length, before, 'muted, he says nothing more');
     assert.equal(await fresh.page.evaluate(() => [...document.querySelectorAll('audio')].some(a => !a.paused)), false);
     await fresh.ctx.close();
@@ -267,7 +310,7 @@ try {
   await check('Keyboard: Tab reaches Roll, Enter rolls', async () => {
     await page.locator('.dice-buttons .btn').focus();
     await page.keyboard.press('Enter');
-    await waitResult(page);
+    await waitRest(page);
   });
 
   await check('Navigation links scroll to their sections', async () => {
@@ -353,9 +396,8 @@ try {
         await touch('touchEnd');
         assert.equal(held, true, 'finger picked up the die');
         assert.equal(await m.page.evaluate(() => scrollY), scroll0, 'page stayed put');
-        await waitResult(m.page);
-        const info = await m.page.evaluate(() => __glassDie.inspect());
-        assert.equal(await shown(m.page), upFace(info.quaternion).value);
+        await waitRest(m.page);
+        await restedReadsTrue(m.page, 'touch throw');
       });
     }
     assert.deepEqual(m.errors, []);
@@ -381,9 +423,8 @@ try {
     await check('Reduced motion: sections are shown without animation and the die still rolls', async () => {
       assert.equal(await r.page.locator('.reveal:not(.is-visible)').count(), 0);
       await r.page.locator('.dice-buttons .btn').click();
-      await waitResult(r.page);
-      const info = await r.page.evaluate(() => __glassDie.inspect());
-      assert.equal(await shown(r.page), upFace(info.quaternion).value);
+      await waitRest(r.page);
+      await restedReadsTrue(r.page, 'reduced motion');
     });
     await r.ctx.close();
   }

@@ -121,16 +121,17 @@ export default function InteractiveDice() {
   /* The automated checks drive the die through this; it is inert otherwise. */
   useEffect(() => {
     window.__glassDie = {
-      roll: () => api.roll?.(),
-      fetch: () => api.fetch?.(),
+      roll: seed => api.roll?.(seed),
+      fetch: seed => api.fetch?.(seed),
+      pose: pose => api.pose?.(pose),
       inspect: () => api.inspect?.(),
       sound: () => audio.current ? {state: audio.current.state, muted: audio.current.muted, ...audio.current.stats} : null,
     };
     return () => { delete window.__glassDie; };
   }, [api]);
 
-  const onImpact = useCallback(strength => {
-    audio.current?.impact({strength});
+  const onImpact = useCallback((strength, surface) => {
+    audio.current?.impact({strength, surface});
     /* A good hard crack against the rail earns a word about it. */
     if (strength > 0.85) voice.current?.say(MORROW_SITE.hardThrow, {once: true});
   }, []);
@@ -181,12 +182,13 @@ export default function InteractiveDice() {
   const status = phase === 'held' ? 'Let go to throw.'
     : phase === 'held-off' ? 'Drop it on the mat.'
     : phase === 'rolling' ? 'Tumbling…'
+    : phase === 'cocked' ? MORROW_SITE.cocked.text
     : lost ? MORROW_SITE.dropped.text
     : result ? result.line
     : HERO.invitation;
 
   return (
-    <div className={`dice-stage${ready ? ' is-ready' : ''}`} ref={box}>
+    <div className={`dice-stage${ready ? ' is-ready' : ''}`} ref={box} data-phase={phase}>
       <div className="dice-frame" ref={frame}>
         {supported ? (
           <SceneBoundary fallback={still}>
