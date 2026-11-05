@@ -12,11 +12,12 @@
     "build": "vite build",
     "preview": "vite preview --port 4173",
     "images": "node scripts/prepare-images.mjs",
-    "test": "node scripts/check-site.mjs"
+    "test": "node scripts/check-site.mjs",
+    "test:physics": "node scripts/die-physics-test.mjs"
   },
   "dependencies": {
+    "@dimforge/rapier3d-compat": "^0.19.2",
     "@react-three/fiber": "^9.8.2",
-    "@react-three/rapier": "^2.2.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "three": "^0.187.0"

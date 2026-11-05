@@ -1,6 +1,8 @@
 /* Glass & Fortune — impact voice for the 3D die.
-   Copied unchanged from the game (runtime/dice-3d-sound.js) so the website
-   die strikes the table with the same synthesised glass-on-felt voice.
+   Copied from the game (runtime/dice-3d-sound.js) so the website die strikes
+   the table with the same synthesised voice. The one addition is the
+   optional `surface` on impact() (see SURFACES below); without it the voice
+   is exactly the game's.
 
    One glass-on-felt strike, synthesised. Nothing is loaded: no samples, no
    impulse response file, nothing fetched. That matches the asset's own
@@ -68,6 +70,18 @@ const DEFAULTS = {
   thumpSeconds: 0.090,
   ringLevel: 0.088,    // the glass itself, -19 dBFS alone
   ringDecayScale: 1,
+};
+
+/* What the die strikes changes the voice. The website's mat is velvet under
+   a sheet of glass, inside walnut rails:
+   - glass: glass meeting glass rings brighter and longer, and the velvet
+     under the sheet takes most of the body out of it;
+   - wood: lacquered walnut gives a warm knock and damps the ring sooner.
+   'felt' is the game's own table, unchanged, and the default. */
+const SURFACES = {
+  felt: {pitch: 1, ring: 1, ringDecay: 1, body: 1, bodyHz: 1, click: 1, clickHz: 1},
+  glass: {pitch: 1.14, ring: 1.55, ringDecay: 1.35, body: 0.45, bodyHz: 1.4, click: 1.15, clickHz: 1.35},
+  wood: {pitch: 0.92, ring: 0.7, ringDecay: 0.7, body: 1.35, bodyHz: 0.62, click: 0.85, clickHz: 0.75},
 };
 
 export function createDiceAudio(options = {}) {
@@ -192,7 +206,11 @@ export function createDiceAudio(options = {}) {
     /* Each slot keeps its own pitch, so a die sounds like itself across a roll
        and the row does not sound like one die struck five times. */
     const detune = 1 + ((dieIndex % 5) - 2) * cfg.spread;
-    const freq = cfg.baseFreq * detune;
+    const surf = SURFACES[ev.surface] || SURFACES.felt;
+    /* No two strikes of a real die are the same: where on the die it lands
+       moves the pitch a little, and the ring a little more. */
+    const vary = ev.surface ? 1 + (Math.random() - 0.5) * 0.05 : 1;
+    const freq = cfg.baseFreq * detune * surf.pitch * vary;
 
     /* Perceptual, not linear: halving the strike speed should not halve the
        loudness or the roll's later bounces vanish. */
@@ -201,14 +219,14 @@ export function createDiceAudio(options = {}) {
     /* Contact. Two hard surfaces meeting, before anything has had time to
        ring. Highpassed rather than band-limited, so it carries real air above
        8kHz — a narrow band here measured as no top end at all. */
-    burst(at, cfg.clickSeconds, cfg.clickLevel * amp,
-          cfg.clickHz * (0.9 + 0.2 * strength), 'highpass', 0.7, 0.05);
+    burst(at, cfg.clickSeconds, cfg.clickLevel * amp * surf.click,
+          cfg.clickHz * surf.clickHz * (0.9 + 0.2 * strength), 'highpass', 0.7, 0.05);
 
     if (!settle) {
       /* Body. The layer the shipped samples are missing: felt over wood taking
          the weight. Low noise plus a short low tone, both gone in under 90ms. */
-      burst(at, cfg.bodySeconds, cfg.bodyLevel * amp, cfg.bodyHz, 'lowpass', null, 0.06);
-      partial(at, cfg.thumpHz * detune, cfg.thumpSeconds, cfg.thumpLevel * amp, 0.06);
+      burst(at, cfg.bodySeconds, cfg.bodyLevel * amp * surf.body, cfg.bodyHz * surf.bodyHz, 'lowpass', null, 0.06);
+      partial(at, cfg.thumpHz * detune * surf.bodyHz, cfg.thumpSeconds, cfg.thumpLevel * amp * surf.body, 0.06);
     }
 
     /* Ring. Brightness rises with the strike: a hard hit excites the upper
@@ -217,12 +235,14 @@ export function createDiceAudio(options = {}) {
     for (let i = 0; i < PARTIALS.length; i++) {
       const p = PARTIALS[i];
       const bright = i === 0 ? 1 : Math.pow(strength, 0.5 + i * 0.35);
-      partial(at, freq * p.ratio, p.decay * cfg.ringDecayScale * (settle ? 0.6 : 1),
-              cfg.ringLevel * p.level * amp * bright * ringScale, 0.18);
+      const ringVary = ev.surface ? 1 + (Math.random() - 0.5) * 0.3 : 1;
+      partial(at, freq * p.ratio, p.decay * cfg.ringDecayScale * surf.ringDecay * (settle ? 0.6 : 1),
+              cfg.ringLevel * p.level * amp * bright * ringScale * surf.ring * ringVary, 0.18);
     }
 
     stats.impacts++;
     stats.lastStrength = strength;
+    if (ev.surface) stats[ev.surface] = (stats[ev.surface] || 0) + 1;
     return true;
   }
 
