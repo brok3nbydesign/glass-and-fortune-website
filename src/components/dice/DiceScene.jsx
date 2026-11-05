@@ -607,7 +607,9 @@ function Die({sim, die, bounds, api, uniforms, onResult, onPhase, onImpact, onAc
      own voice, never more than a few a moment. */
   function strike(ev) {
     if (s.held && ev.change < 1.5) return;
-    const now = performance.now();
+    /* timed in simulation seconds, not wall-clock: on a slow frame many
+       steps run at once, and their strikes are still spread out in time */
+    const now = ev.time * 1000;
     const strength = Math.min(1, (ev.change - 0.35) / 10);
     if (strength < 0.015) return;
     s.soundWindow = s.soundWindow.filter(t => now - t < 1000);
